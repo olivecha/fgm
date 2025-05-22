@@ -14,19 +14,19 @@ class FGManifoldManager(object):
         self.phi_values = [f.phi[0] for f in self.flames]
 
 
-    def flame_at_phi(phi):
+    def flame_at_phi(self, phi):
         """
         Finds the 1D flame closest to the phi value
         """
         return self.flames[np.argmin(np.abs(self.phi_values - phi))]
 
-    def Sl_at_phi(phi, attr):
+    def Sl_at_phi(self, phi):
         """
         Return the nominal laminar flame speed at phi
         """
         return self.flame_at_phi(phi).velocity[0]
 
-    def Lt_at_phi(phi, attr):
+    def Lt_at_phi(self, phi):
         """
         Return the thermal flame thickness at phi
         """
