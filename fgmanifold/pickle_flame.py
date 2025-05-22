@@ -8,14 +8,16 @@ class PickleFreeFlame(object):
     """
     air =  {"O2":0.21, "N2":0.79}
     
-    def __init__(self, flame, fuel, air=None):
+    def __init__(self, source, phi, fuel, air=None):
         """
         Class constructor storing FreeFlame attributes
         as attributes of the current class
         """
         # Argument properties
+        self.phi = phi
         self.fuel = fuel
-        self.air = air
+        if air is not None:
+            self.air = air
         
         # Base properties
         self.gas = source.gas
@@ -29,13 +31,14 @@ class PickleFreeFlame(object):
         # Elemental fractions
         self.elemental_mass_fraction = {}
         for e in ['H', 'C', 'N']:
-            self.elementa_mass_fraction[e] = source.elemental_mass_fraction(e)
+            self.elemental_mass_fraction[e] = source.elemental_mass_fraction(e)
         self.elemental_mole_fraction = {}
         for e in ['H', 'C', 'N']:
-            self.elementa_mole_fraction[e] = source.elemental_mole_fraction(e)
+            self.elemental_mole_fraction[e] = source.elemental_mole_fraction(e)
 
         # Physical properties
         self.density_mass = source.density_mass
+        self.density = source.density_mass
         self.density_mole = source.density_mole
         self.volume_mass = source.volume_mass
         self.volume_mole = source.volume_mole

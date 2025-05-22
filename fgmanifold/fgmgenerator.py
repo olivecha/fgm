@@ -1,3 +1,4 @@
+import pickle
 from tqdm import tqdm
 import multiprocessing
 import numpy as np
@@ -8,19 +9,23 @@ def solve_flame_at_phi(args):
     """
     Multiprocessing function solving one 1D flame
     """
-    phi = args[0]
-    self = args[1]
-    print(phi, self.fuel)
-    gas = ct.Solution(self.mech)
-    #gas.TPY = 300, 1*ct.one_atm, Y
-    gas.TP = self.temp, self.P * ct.one_atm
-    gas.set_equivalence_ratio(phi, self.fuel, self.air)
+    phi = args['phi']
+    mech = args['mech']
+    fuel = args['fuel']
+    Tin = args['temp']
+    P = args['P']
+    air = args['air']
+    gas = ct.Solution(mech)
+    gas.TP = Tin, P
+    gas.set_equivalence_ratio(phi, fuel, air)
     width = 0.16
     flame = ct.FreeFlame(gas, width=width)
     flame.set_refine_criteria(ratio=3.0, slope=0.1, curve=0.1)
-    flame.solve(loglevel=0, auto=True)
-    return PickleFreeFlame(flame, self.fuel, self.air)
-
+    try:
+        flame.solve(loglevel=0, auto=True)
+        return PickleFreeFlame(flame, phi, fuel, air)
+    except ct._utils.CanteraError:
+        return
 
 class FGMGenerator(object):
     """
@@ -60,21 +65,35 @@ class FGMGenerator(object):
 
     def solve(self):
         """Solve Cantera FreeFlames in parallel"""
+
         flames = []
         ncalls = len(self.phi_values)
-        with multiprocessing.Pool() as pool:
-            for f in tqdm(pool.imap(solve_flame_at_phi, 
-                                    zip(self.phi_values, [self]*ncalls)), total=ncalls):
+        pool = multiprocessing.Pool()
+        inputs = []
+
+        for phi in self.phi_values:
+            fun_call = {'phi':phi,
+                        'mech':self.mech,
+                        'fuel':self.fuel,
+                        'air':self.air,
+                        'temp':self.T,
+                        'P':self.P}
+            inputs.append(fun_call)
+        for f in tqdm(pool.imap(solve_flame_at_phi, inputs), total=ncalls):
+            if f is not None:
                 flames.append(f)
         self.flames = flames
 
-
-        
-        
-
-
-
-
+    def save(self, filepath):
+        """
+        Save fgm to {filepath}
+        """
+        if len(filepath.split('.')) >= 2:
+                pass
+        else:
+            filepath += '.fgm'
+        with open(filepath, 'wb') as ffile:
+            pickle.dump(self, ffile)
 
 
 
