@@ -96,5 +96,3 @@ class FGMGenerator(object):
             pickle.dump(self, ffile)
 
 
-
-
